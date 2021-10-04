@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html></html>
+<html>
+    <head>
+        <title>Arduino Ajax I/O</title>   
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+	<style>
+		body{
+            background-color: #1a1c1e;
+            overflow: hidden;
+            background-image: url("open.jpg");
+            background-repeat: no-repeat;
+            background-position: center 70px;
+            margin: 0;
+            transition: background-color .8s;
+        }
+		.IO_box {
+			float: left;
+			margin: 0 20px 20px 0;
+			border: 1px solid blue;
+			padding: 0 5px 0 5px;
+			width: 120px;
+			
+		}
+		#click{
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            z-index: 10;
+        }
+		#aviso {
+			font-size: 1.25em;
+			color: white;
+			opacity: 0;
+			text-align: center;
+			position: absolute;
+			padding: 17px;
+		}
+		#situacaoLed {
+			font-size: 1.25em;
+			color: white;
+			text-align: center;
+			position: absolute;
+			top: 570px;
+			left: 33%;
+		}
+		.luz{
+            z-index: -1;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity .6s;
+        }
+        .tempo{
+            /*background-image: url("tempo.png");*/
+            background-position: calc(50% + 63px) -555px;
+        }
+        .poder{
+            /*background-image: url("poder.png");*/
+            background-position: calc(50% + 7px) -618px;
+        }
+        .espaco{
+            /*background-image: url("espaco.png");*/
+            background-position: calc(50% - 35px) -615px;
+        }
+        .realidade{
+            /*background-image: url("real.png");*/
+            background-position: calc(50% - 79px) -613px;
+        }
+        .alma{
+            /*background-image: url("alma.png");*/
+            background-position: calc(50% - 114px) -605px;
+        }
+        .mente{
+            /*background-image: url("mente.png");*/
+            background-position: calc(50% - 25px) -967px;
+        }
+	
+
+		@keyframes timeAviso {
+			20%,80%{
+				opacity: 1;
+			}
+			0%,100%{
+				opacity: 0;
+				
+			}
+		}
+		@keyframes luva {
+            0%, 100%{
+                background-position: center 70px;
+                background-size: 134px;
+
+            }
+            50%{
+                background-position: center 60px;
+                background-size: 146px;
+            }
+        }
+	</style>
+    </head>
+    <body onload="GetArduinoIO()">
+
+		<div id="click" onclick="GetButton1()"></div>
+
+
+    	<div class="luz tempo"></div>
+    	<div class="luz poder"></div>
+    	<div class="luz espaco"></div>
+    	<div class="luz realidade"></div>
+    	<div class="luz alma"></div>
+    	<div class="luz mente"></div>
+		<p id="aviso">O tempo de envio do comando ao arduino é de aproximadamente 2 segundos, não adianta perder tempo clicando toda hora.</p>
+		<p id="situacaoLed">...</p>
+    </body>
+
+	<script>
+		strLED = "";
+		var luzes = document.querySelectorAll(".luz");
+		console.log(luzes);
+		var LED_state = 0;
+		var clicks = 0;
+		function GetArduinoIO()
+		{
+			
+			if(clicks >= 4){
+				document.getElementById("aviso").style.animation =  "timeAviso 8s";
+				setTimeout(function(){
+					document.getElementById("aviso").style.animation =  "none";
+				}, 8000);
+
+			}
+			clicks = 0;
+			nocache = "&nocache=" + Math.random() * 1000000;
+			var request = new XMLHttpRequest();
+			request.onreadystatechange = function()
+			{
+				if (this.readyState == 4) {
+					if (this.status == 200) {
+						if (this.responseXML != null) {
+							// Bloco de recebimento do arquivo XML, contendo a situação atual do Led.
+						
+							if (this.responseXML.getElementsByTagName('LED')[0].childNodes[0].nodeValue === "on") {
+								document.getElementById("situacaoLed").innerHTML = "Aceso";
+								LED_state = 1;
+							}
+							else {
+								document.getElementById("situacaoLed").innerHTML = "Apagado";
+								LED_state = 0;
+							}
+						}
+					}
+				}
+			}
+			// Envia o GET request com a situação do botão On/Off
+			request.open("GET", "ajax_inputs" + strLED + nocache, true);
+			request.send(null);
+			setTimeout('GetArduinoIO()', 1500);
+			strLED = "";
+		}
+		// service LEDs when checkbox checked/unchecked
+		function GetButton1()
+		{
+			clicks += 1;
+			console.log(clicks);
+			if (LED_state === 1) {
+				LED_state = 0;
+				strLED = "&LED=0";
+				document.body.style.backgroundImage = "url('open.jpg')";
+                document.body.style.animation = "none";
+				luzes.forEach(function(luz){
+                    luz.style.opacity = "0";
+
+                });
+			}
+			else {
+				LED_state = 1;
+				strLED = "&LED=1";
+				document.body.style.backgroundImage = "url('close.jpg')";
+                document.body.style.animation = "luva .3s";
+
+				luzes.forEach(function(luz){
+                    luz.style.opacity = "1";
+                    
+                });
+			}
+		}
+	</script>
+</html>
